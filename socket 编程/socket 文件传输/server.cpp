@@ -6,9 +6,17 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#define BUF_SIZE 100
+#define BUF_SIZE 1024
 
 int main(){
+    //先检查文件是否存在
+    char filename[] = "/Users/voidhug/Desktop/test.txt";  //文件名
+    FILE *fp = fopen(filename, "rb");  //以二进制方式打开文件
+    if(fp == NULL){
+        printf("Cannot open file, press any key to exit!\n");
+        exit(0);
+    }
+    
     //创建套接字
     int serv_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     
@@ -28,12 +36,17 @@ int main(){
     socklen_t clnt_addr_size = sizeof(clnt_addr);
     int clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_addr, &clnt_addr_size);
     
-    sleep(3);  //注意这里，让程序暂停10秒
+    //循环发送数据，直到文件结尾
+    char buffer[BUF_SIZE] = {0};  //缓冲区
+    int nCount;
+    while( (nCount = fread(buffer, 1, BUF_SIZE, fp)) > 0 ){
+        write(clnt_sock, buffer, nCount);
+    }
     
-    //接收客户端发来的数据，并原样返回
-    char buffer[BUF_SIZE];  //缓冲区
-    int strlen = read(clnt_sock, buffer, BUF_SIZE); //接收客户端发来的数据
-    write(clnt_sock, buffer, strlen);  //将数据原样返回
+    shutdown(clnt_sock, SHUT_WR);  //文件读取完毕，断开输出流，向客户端发送FIN包
+    read(clnt_sock, buffer, BUF_SIZE);  //阻塞，等待客户端接收完毕
+    
+    fclose(fp);
     
     //关闭套接字
     close(clnt_sock);
