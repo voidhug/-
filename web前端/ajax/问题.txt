@@ -1,0 +1,2 @@
+在 XMLHttpRequestjQuery.html 中，为什么 search 的时候需要请求 serverjson2.php，serverjson2.php 有 header('Access-Control-Allow-Origin:*');header('Access-Control-Allow-Methods:POST,GET');header('Access-Control-Allow-Credentials:true'); 
+而 save 的时候不需要，而是去请求 serverjson.php。
